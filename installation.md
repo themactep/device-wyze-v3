@@ -33,7 +33,7 @@ Run the following command in terminal to copy raw data from the SD card
 into a binary file on the computer:
 
 ```
-dd bs=512 skip=16 count=32768 if=/dev/sdc of=./fulldump.bin
+sudo dd bs=512 skip=16 count=32768 if=/dev/sdc of=./fulldump.bin
 ```
 
 Make sure your resulting file is 16MB in size. Check integrity of the data
@@ -52,6 +52,7 @@ by running `sdcards/sdcard1.sh` script.
 Insert the card into the camera and run:
 
 ```
+mmc rescan
 setenv baseaddr 0x80600000
 setenv flashsize 0x1000000
 mw.b ${baseaddr} 0xff ${flashsize}
