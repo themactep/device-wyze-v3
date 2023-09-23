@@ -59,7 +59,9 @@ done
 echo
 
 echo "Creating a 64MB FAT32 partition on the SD card."
-parted -s ${card_device} mklabel msdos mkpart primary fat32 1MB 64MB && mkfs.vfat ${card_device}1 > /dev/null
+parted -s ${card_device} mklabel msdos mkpart primary fat32 1MB 64MB && \
+    sleep 3 && \
+    mkfs.vfat ${card_device}1 > /dev/null
 if [ $? -ne 0 ]; then
     echo "Cannot create a partition."
     exit 4
