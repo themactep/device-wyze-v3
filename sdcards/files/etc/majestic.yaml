@@ -16,7 +16,6 @@ osd:
   template: "OpenIPC v.2.2 | %F %T %Z"
 nightMode:
   enabled: true
-  irSensorPin: 
   irSensorPinInvert: false
   irCutPin1: 53
   irCutPin2: 52
@@ -29,8 +28,9 @@ records:
   maxUsage: 95
 video0:
   enabled: true
-  fps: 20
-  codec: h264
+  size: 1920x1080
+  fps: 30
+  codec: h265
 video1:
   enabled: false
 jpeg:

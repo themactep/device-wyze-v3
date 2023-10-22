@@ -7,7 +7,7 @@
 # 2023 Paul Philippov, paul@themactep.com
 #
 
-show_help() {
+show_help_and_exit() {
     echo "Usage: $0 -d <SD card device> -s <SoC model>"
     if [ "$EUID" -eq 0 ]; then
         echo -n "Detected devices: "
@@ -18,8 +18,7 @@ show_help() {
 
 if [ "$EUID" -ne 0 ]; then
     echo "Please run as root."
-    show_help
-    exit 1
+    show_help_and_exit
 fi
 
 # command line arguments
@@ -30,10 +29,7 @@ while getopts d:s: flag; do
     esac
 done
 
-if [ -z "$card_device" ]; then
-    show_help
-    exit 3
-fi
+[ -z "$card_device" ] && show_help_and_exit
 
 case "${soc_model^^}" in
     A|AL|L|LC|N|X|ZL|ZX)
@@ -41,7 +37,7 @@ case "${soc_model^^}" in
     *)
         echo "You need to provide a SoC model."
         echo "Possible values: A, AL, L, LC, N, X, ZL, ZX."
-        exit 4
+        show_help_and_exit
 esac
 
 if [ ! -e "$card_device" ]; then

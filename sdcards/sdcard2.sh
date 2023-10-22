@@ -50,6 +50,25 @@ if [ "$ret" != "Y" ]; then
 fi
 
 echo
+select wlanchoice in "AltoBeam" "Realtek"; do
+    case $wlanchoice in
+        AltoBeam)
+            wlandev="atbm603x-t31-wyze-v3"
+            wlanmod="hal_apollo/atbm603x_wifi_sdio.ko"
+            modline="extra/hal_apollo/atbm603x_wifi_sdio.ko: kernel/net/wireless/cfg80211.ko"
+            break
+            ;;
+        Realtek)
+            wlandev="rtl8189ftv-t31-wyze-v3"
+            wlanmod="8189fs.ko"
+            modline="extra/8189fs.ko: kernel/net/wireless/cfg80211.ko"
+            break
+            ;;
+        *)
+            echo "Please select one of the available options."
+    esac
+done
+echo
 while [ -z "$wlanssid" ]; do
     read -p "Enter Wireless network SSID: " wlanssid
 done
@@ -82,14 +101,18 @@ fi
 
 echo "Copying files."
 cp -r $(dirname $0)/files ${sdmount}/
+mkdir -p $(dirname ${sdmount}/files/lib/modules/3.10.14__isvp_swan_1.0__/extra/${wlanmod})
+cp $(dirname $0)/extra/${wlanmod} ${sdmount}/files/lib/modules/3.10.14__isvp_swan_1.0__/extra/${wlanmod}
 
 echo "Creating installation script."
 echo "#!/bin/sh
 
+fw_setenv wlandev \"${wlandev}\"
 fw_setenv wlanssid \"${wlanssid}\"
 fw_setenv wlanpass \"${wlanpass}\"
 
 cp -rv \$(dirname \$0)/files/* /
+echo \"${modline}\" | tee -a /lib/modules/3.10.14__isvp_swan_1.0__/modules.dep
 
 echo \"
 Configuration is done.
