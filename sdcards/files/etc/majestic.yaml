@@ -1,8 +1,8 @@
 system:
+  webAdmin: disabled
   buffer: 1024
-  staticDir: /var/www/majestic
 isp:
-  blkCnt: 5
+  blkCnt: 1
 image:
   mirror: false
   flip: false
@@ -13,10 +13,11 @@ image:
   luminance: 50
 osd:
   enabled: false
-  template: "OpenIPC v.2.2 | %F %T %Z"
+  template: "%a %e %B %Y %H:%M:%S %Z"
 nightMode:
   enabled: true
   irSensorPinInvert: false
+  irSoftSensor: true
   irCutPin1: 53
   irCutPin2: 52
   backlightPin: 47
@@ -28,9 +29,6 @@ records:
   maxUsage: 95
 video0:
   enabled: true
-  size: 1920x1080
-  fps: 30
-  codec: h265
 video1:
   enabled: false
 jpeg:
@@ -61,7 +59,7 @@ motionDetect:
 ipeye:
   enabled: false
 netip:
-  enabled: true
+  enabled: false
   user: admin
   password: 6V0Y4HLF
   port: 34567
