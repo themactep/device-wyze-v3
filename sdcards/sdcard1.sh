@@ -8,12 +8,12 @@
 #
 
 show_help_and_exit() {
-    echo "Usage: $0 -d <SD card device> -s <SoC model>"
+    echo "Usage: $0 -d <SD card device>"
     if [ "$EUID" -eq 0 ]; then
         echo -n "Detected devices: "
         fdisk -x | grep -B1 'SD/MMC' | head -1 | awk '{print $2}' | sed 's/://'
     fi
-    exit 2
+    exit 1
 }
 
 if [ "$EUID" -ne 0 ]; then
@@ -22,27 +22,29 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # command line arguments
-while getopts d:s: flag; do
+while getopts d: flag; do
     case ${flag} in
         d) card_device=${OPTARG} ;;
-        s) soc_model=${OPTARG} ;;
     esac
 done
 
 [ -z "$card_device" ] && show_help_and_exit
 
-case "${soc_model^^}" in
-    A|AL|L|LC|N|X|ZL|ZX)
+echo
+select soc_model in "T31A" "T31AL" "T31L" "T31LC" "T31N" "T31X" "T31ZL" "T31ZX"; do
+    case $soc_model in
+        "T31A"|"T31AL"|"T31L"|"T31LC"|"T31N"|"T31X"|"T31ZL"|"T31ZX")
+        break
         ;;
     *)
-        echo "You need to provide a SoC model."
-        echo "Possible values: A, AL, L, LC, N, X, ZL, ZX."
-        show_help_and_exit
-esac
+        echo "Please select one of the available options."
+    esac
+done
+echo
 
 if [ ! -e "$card_device" ]; then
     echo "Device $card_device not found."
-    exit 5
+    exit 2
 fi
 
 while mount | grep $card_device > /dev/null; do
@@ -61,7 +63,7 @@ parted -s ${card_device} mklabel msdos mkpart primary fat32 1MB 64MB && \
     mkfs.vfat ${card_device}1 > /dev/null
 if [ $? -ne 0 ]; then
     echo "Cannot create a partition."
-    exit 6
+    exit 3
 fi
 
 sdmount=$(mktemp -d)
@@ -69,19 +71,21 @@ sdmount=$(mktemp -d)
 echo "Mounting the partition to ${sdmount}."
 if ! mkdir -p $sdmount; then
     echo "Cannot create ${sdmount}."
-    exit 7
+    exit 4
 fi
 
 if ! mount ${card_device}1 $sdmount; then
     echo "Cannot mount ${card_device}1 to ${sdmount}."
-    exit 8
+    exit 5
 fi
 
-fw_filename=openipc-t31${soc_model,,}-lite-8mb.bin
+fw_filename=openipc-${soc_model,,}-lite-8mb.bin
 echo "Downloading the latest OpenIPC firmware image."
-if ! wget -q -O ${sdmount}/${fw_filename} "https://openipc.org/cameras/vendors/ingenic/socs/t31${soc_model,,}/download_full_image?flash_size=8&flash_type=nor&fw_release=lite"; then
+url="https://openipc.org/cameras/vendors/ingenic/socs/${soc_model,,}/download_full_image?flash_size=8&flash_type=nor&fw_release=lite"
+echo "Downloading firmware from ${url}"
+if ! wget -q -O ${sdmount}/${fw_filename} ${url}; then
     echo "Cannot download openipc image."
-    exit 9
+    exit 6
 fi
 
 echo "Unmounting the SD partition."
