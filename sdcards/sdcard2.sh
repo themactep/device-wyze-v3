@@ -31,9 +31,9 @@ done
 [ -z "$card_device" ] && show_help_and_exit
 
 echo "Please select your camera model"
-select ret in "AtomCam 2" "Hualai HL-CAM04" "Wyze Cam V3" "Wyze Doorbell"; do
+select ret in "ATOM Cam 2" "Hualai HL-CAM04" "Wyze Cam V3" "Wyze Doorbell"; do
     case $ret in
-        "AtomCam 2"|"Wyze Cam V3"|"Wyze Doorbell")
+        "ATOM Cam 2"|"Wyze Cam V3"|"Wyze Doorbell")
             camdev="wyze-v3"
             break
             ;;
