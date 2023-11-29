@@ -30,6 +30,9 @@ done
 
 [ -z "$card_device" ] && show_help_and_exit
 
+# initialize list of files
+files=""
+
 echo "Please select your camera model"
 select ret in "ATOM Cam 2" "Hualai HL-CAM04" "Wyze Cam V3" "Wyze Doorbell"; do
     case $ret in
@@ -39,11 +42,12 @@ select ret in "ATOM Cam 2" "Hualai HL-CAM04" "Wyze Cam V3" "Wyze Doorbell"; do
             ;;
         "Hualai HL-CAM04")
             camdev="hl-cam04"
+            files="${files} lib/modules/3.10.14__isvp_swan_1.0__/ingenic/sensor_sc3335_t31.ko"
             sensor_modline="ingenic/sensor_sc3335_t31.ko: ingenic/tx-isp-t31.ko"
             break
             ;;
         *)
-            echo "Please select one of the available options."
+            echo "Please select one of the available options"
     esac
 done
 
@@ -52,18 +56,20 @@ select ret in "AltoBeam" "Realtek"; do
     case $ret in
         AltoBeam)
             wlandev="atbm603x-t31-wyze-v3"
-            wlanmod="hal_apollo/atbm603x_wifi_sdio.ko"
+            files="${files} lib/modules/3.10.14__isvp_swan_1.0__/extra/hal_apollo/atbm603x_wifi_sdio.ko"
+            files="${files} usr/share/atbm60xx_conf/atbm_txpwer_dcxo_cfg.txt"
+            files="${files} usr/share/atbm60xx_conf/set_rate_power.txt"
             wlan_modline="extra/hal_apollo/atbm603x_wifi_sdio.ko: kernel/net/wireless/cfg80211.ko"
             break
             ;;
         Realtek)
             wlandev="rtl8189ftv-t31-wyze-v3"
-            wlanmod="8189fs.ko"
+            files="${files} lib/modules/3.10.14__isvp_swan_1.0__/extra/8189fs.ko"
             wlan_modline="extra/8189fs.ko: kernel/net/wireless/cfg80211.ko"
             break
             ;;
         *)
-            echo "Please select one of the available options."
+            echo "Please select one of the available options"
     esac
 done
 
@@ -80,12 +86,12 @@ done
 echo
 
 if [ ! -e "$card_device" ]; then
-    echo "Device $card_device not found."
+    echo "Device $card_device not found"
     exit 2
 fi
 
 while mount | grep $card_device > /dev/null; do
-    umount $(mount | grep $card_device | awk '{print $1}')
+    umount -l $(mount | grep $card_device | awk '{print $1}')
 done
 
 read -p "All existing information on the card will be lost! Proceed? [Y/N]: " ret
@@ -94,44 +100,53 @@ if [ "$ret" != "Y" ]; then
     exit 99
 fi
 
-echo "Creating a 64MB FAT32 partition on the SD card."
+echo "Creating a 64MB FAT32 partition on the SD card"
 parted -s ${card_device} mklabel msdos mkpart primary fat32 1MB 64MB && \
     sleep 3 && \
     mkfs.vfat ${card_device}1 > /dev/null
 if [ $? -ne 0 ]; then
-    echo "Cannot create a partition."
+    echo "Cannot create a partition"
     exit 3
 fi
 
 sdmount=$(mktemp -d)
 
-echo "Mounting the partition to ${sdmount}."
+echo "Mount the partition to ${sdmount}"
 if ! mkdir -p $sdmount; then
-    echo "Cannot create ${sdmount}."
+    echo "Cannot create ${sdmount}"
     exit 4
 fi
 
 if ! mount ${card_device}1 $sdmount; then
-    echo "Cannot mount ${card_device}1 to ${sdmount}."
+    echo "Cannot mount ${card_device}1 to ${sdmount}"
     exit 5
 fi
 
-echo "Copying files."
-cp -r $(dirname $0)/files ${sdmount}/
-mkdir -p $(dirname ${sdmount}/files/lib/modules/3.10.14__isvp_swan_1.0__/extra/${wlanmod})
-cp $(dirname $0)/extra/${wlanmod} ${sdmount}/files/lib/modules/3.10.14__isvp_swan_1.0__/extra/${wlanmod}
+echo "Copy common files"
+mkdir -p ${sdmount}/files
+cp -r $(dirname $0)/common/* ${sdmount}/files/
 
-echo "Creating installation script."
+echo "Copy optional files"
+for file in $files; do
+  mkdir -p $(dirname ${sdmount}/files/${file})
+  cp -v $(dirname $0)/addons/${file} ${sdmount}/files/${file}
+done
+
+echo "Create temporary file with additional module lines"
+if [ -n "$sensor_modline" ]; then
+  echo "${sensor_modline}" | tee -a ${sdmount}/modlines.add
+fi
+if [ -n "$wlan_modline" ]; then
+  echo "${wlan_modline}" | tee -a ${sdmount}/modlines.add
+fi
+
+echo "Create installation script"
 echo "#!/bin/sh
-
 fw_setenv wlandev \"${wlandev}\"
 fw_setenv wlanssid \"${wlanssid}\"
 fw_setenv wlanpass \"${wlanpass}\"
-
 cp -rv \$(dirname \$0)/files/* /
-[ -n \"$sensor_modline\" ] && echo \"${sensor_modline}\" | tee -a /lib/modules/3.10.14__isvp_swan_1.0__/modules.dep
-[ -n \"$wlan_modline\" ] && echo \"${wlan_modline}\" | tee -a /lib/modules/3.10.14__isvp_swan_1.0__/modules.dep
-
+cat \$(dirname \$0)/modlines.add | tee -a /lib/modules/3.10.14__isvp_swan_1.0__/modules.dep
 echo \"
 Configuration is done.
 
@@ -141,7 +156,7 @@ and UART adapter, and reconnecting power back after 5 seconds.
 \"
 " > ${sdmount}/install.sh
 
-echo "Unmounting the SD partition."
+echo "Unmount the SD partition"
 sync
 umount $sdmount
 eject $card_device
