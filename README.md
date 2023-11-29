@@ -1,6 +1,20 @@
-Installing OpenIPC on Wyze Cam V3
----------------------------------
+OpenIPC installer for Hualai based cameras
+==========================================
 
+- ATOM Cam 2
+- Hualai HL-CAM04
+- Wyze Cam V3
+- Wyze Doorbell
+
+This installer used Lite edition of [OpenIPC](https://openipc.org/) firmware
+even though each of the cameras has a 16MB flash memory chip.
+
+I find it more benefitial to use a more compact build and only add what's 
+needed. With Lite and the added wireless driver, you will have about 8 MB of
+free space in overlay partition for your own scripts. Cool, huh?
+
+
+## Installation
 
 ### Connect the camera to UART adapter.
 
@@ -12,7 +26,7 @@ With a metal tweezer or a small screwdriver short pins 5 and 6 of
 the flash memory chip immediately after powering up the camera.
 Keep them short until you see the bootloader shell prompt (2-3 seconds).
 
-![](images/uart-flash.png)
+![UART on Wyze Cam V3](images/uart-flash.png)
 
 
 ### Create a backup of the stock firmware.
@@ -67,7 +81,7 @@ After the camera reboots you should see the OpenIPC logo and a login prompt.
 Log in as "root" with password "12345".
 
 
-### Install wireless driver and initial configuration.
+### Install drivers and initial configuration.
 
 Create a configuration SD card by running `sdcards/sdcard2.sh` script.
 You will be asked for SSID and password of your wireless network.
