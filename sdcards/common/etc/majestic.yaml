@@ -3,6 +3,7 @@ system:
   buffer: 1024
 isp:
   blkCnt: 1
+  lowDelay: false
 image:
   mirror: false
   flip: false
@@ -16,13 +17,13 @@ osd:
   template: "%a %e %B %Y %H:%M:%S %Z"
 nightMode:
   enabled: true
+  nightAPI: true
+  backlightPin: 47
   irSensorPinInvert: false
   irSoftSensor: true
   irCutPin1: 53
   irCutPin2: 52
-  backlightPin: 47
   dncDelay: 30
-  nightAPI: true
 records:
   enabled: false
   path: /mnt/mmcblk0p1/%Y/%m/%d/%H/%M.mp4
@@ -60,13 +61,8 @@ ipeye:
   enabled: false
 netip:
   enabled: false
-  user: admin
-  password: 6V0Y4HLF
-  port: 34567
-  snapshots: true
-  ignoreSetTime: false
 onvif:
   enabled: true
 watchdog:
   enabled: true
-  timeout: 30
+  timeout: 10
