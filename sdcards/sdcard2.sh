@@ -142,9 +142,17 @@ fi
 
 echo "Create installation script"
 echo "#!/bin/sh
-fw_setenv wlandev \"${wlandev}\"
-fw_setenv wlanssid \"${wlanssid}\"
-fw_setenv wlanpass \"${wlanpass}\"
+
+echo \"
+wlandev ${wlandev}
+wlanssid ${wlanssid}
+wlanpass ${wlanpass}
+ir850_led_pin 47
+ir940_led_pin 49
+\" >/tmp/2env.txt
+
+fw_setenv --script /tmp/2env.txt
+
 cp -rv \$(dirname \$0)/files/* /
 cat \$(dirname \$0)/modlines.add | tee -a /lib/modules/3.10.14__isvp_swan_1.0__/modules.dep
 echo \"
