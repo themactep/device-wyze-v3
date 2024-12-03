@@ -1,1 +1,1 @@
-Please just use <https://thingino.com/>
+Please use <https://thingino.com/wyze-c3>
